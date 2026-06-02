@@ -2,14 +2,9 @@ use std::env;
 
 use cxx_qt_lib::{QGuiApplication, QQmlApplicationEngine, QQuickStyle, QString, QUrl};
 use cxx_qt_lib_extras::QApplication;
-use kelp::qquick_servo_engine_view::load_html;
+use kelp::webview;
 
 fn main() {
-    // load_html(
-    //     String::from("<h1>Hello World!<h1>"),
-    //     String::from("https://libremelon.com"),
-    // );
-
     let mut app = QApplication::new();
     QGuiApplication::set_desktop_file_name(&QString::from("org.plankton.browser"));
 
@@ -23,6 +18,8 @@ fn main() {
             "qrc:/qt/qml/org/plankton/browser/src/qml/Main.qml",
         ));
     }
+
+    kelp::init_qml();
 
     if let Some(app) = app.as_mut() {
         app.exec();

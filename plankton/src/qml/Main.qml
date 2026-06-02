@@ -2,6 +2,8 @@ import org.kde.kirigami as Kirigami
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick
+import QtWebEngine
+import org.plankton.kelp 1.0
 
 Kirigami.ApplicationWindow {
     id: root
@@ -39,5 +41,12 @@ Kirigami.ApplicationWindow {
         id: search
         anchors.top: bar.bottom
         width: parent.width
+    }
+
+    ServoWebView {
+        // anchors.top: search.bottom
+        // anchors.bottom: parent.bottom
+        // width: parent.width
+        url: "https://libremelon.com"
     }
 }
