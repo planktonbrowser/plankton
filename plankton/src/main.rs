@@ -5,6 +5,8 @@ use cxx_qt_lib_extras::QApplication;
 use kelp::webview;
 
 fn main() {
+    std::env::set_var("QSG_RHI_BACKEND", "opengl");
+
     let mut app = QApplication::new();
     QGuiApplication::set_desktop_file_name(&QString::from("org.plankton.browser"));
 
