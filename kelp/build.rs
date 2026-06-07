@@ -10,7 +10,7 @@ fn main() {
                 cc.file("cpp/helpers.cpp");
                 println!("cargo:rerun-if-changed=cpp/helpers.cpp");
             })
-            .file("src/webview.rs")
+            .files(["src/webview.rs", "src/renderer.rs"])
             .cpp_file("cpp/helpers.h")
             .build();
     }
