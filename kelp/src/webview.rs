@@ -1,3 +1,4 @@
+use crate::renderer::qobject::QServoRenderer;
 use core::pin::Pin;
 use cxx_qt_lib::QString;
 use cxx_qt_lib::QUrl;
