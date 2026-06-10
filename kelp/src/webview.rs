@@ -1,3 +1,5 @@
+use cxx_qt_lib::{QString, QUrl};
+
 #[cxx_qt::bridge]
 pub(crate) mod qobject {
     unsafe extern "C++" {
@@ -16,4 +18,10 @@ pub(crate) mod qobject {
         #[qproperty(QUrl, url)]
         type ServoWebView = super::QServoWebViewRust;
     }
+}
+
+#[derive(Default)]
+pub struct QServoWebViewRust {
+    title: QString,
+    url: QUrl,
 }
