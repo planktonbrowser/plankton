@@ -3463,6 +3463,11 @@ dependencies = [
 name = "kelp"
 version = "0.1.0"
 dependencies = [
+ "cxx",
+ "cxx-qt",
+ "cxx-qt-build",
+ "cxx-qt-lib",
+ "cxx-qt-lib-extras",
  "servo",
 ]
 
@@ -4495,6 +4500,7 @@ dependencies = [
 name = "plankton"
 version = "0.1.0"
 dependencies = [
+ "cxx",
  "cxx-qt",
  "cxx-qt-build",
  "cxx-qt-lib",
