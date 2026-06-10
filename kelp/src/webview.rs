@@ -9,10 +9,14 @@ pub(crate) mod qobject {
 
         include!("cxx-qt-lib/qurl.h");
         type QUrl = cxx_qt_lib::QUrl;
+
+        include!("cpp/helpers.h");
+        type QQuickItem;
     }
 
     unsafe extern "RustQt" {
         #[qobject]
+        #[base = QQuickItem]
         #[qml_element]
         #[qproperty(QString, title)]
         #[qproperty(QUrl, url)]
