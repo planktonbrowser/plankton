@@ -11,10 +11,10 @@ Kirigami.ApplicationWindow {
         anchors.top: parent.top
         width: parent.width
         TabButton {
-            text: qsTr("Google.com")
+            text: qsTr("google.com")
         }
         TabButton {
-            text: qsTr("Bing.com")
+            text: qsTr("libremelon.com")
         }
         TabButton {
             text: qsTr("kde.org")

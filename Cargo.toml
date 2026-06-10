@@ -1,17 +1,9 @@
-[package]
-name = "plankton"
-version = "0.1.0"
-edition = "2024"
-
 [workspace]
-members = ["kelp"]
+resolver = "3"
+members = [
+    "plankton",
+    "kelp",
+]
 
-[dependencies]
-kelp = { path = "./kelp" }
-cxx-qt = "0.8.1"
-cxx-qt-lib = { version = "0.8.1", features = ["qt_full"] }
-cxx-qt-lib-extras = "0.8.1"
+[workspace.dependencies]
 
-[build-dependencies]
-# The link_qt_object_files feature is required for statically linking Qt 6.
-cxx-qt-build = { version = "0.8.1", features = ["link_qt_object_files"] }
