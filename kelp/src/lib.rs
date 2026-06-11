@@ -1,3 +1,4 @@
+pub(crate) mod renderer;
 pub mod webview;
 
 pub mod qquick_servo_engine_view {
