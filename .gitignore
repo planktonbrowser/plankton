@@ -2,3 +2,5 @@
 qmlls.ini
 .qmlls.ini
 .qtcreator/
+build/
+target/

@@ -1,59 +1,51 @@
-import QtQuick
+import org.kde.kirigami as Kirigami
 import QtQuick.Controls
 import QtQuick.Layouts
-import org.kde.kirigami as Kirigami
-import org.plankton.kelp 1.0
+import QtQuick
+import QtWebEngine
 
 Kirigami.ApplicationWindow {
     id: root
 
     TabBar {
         id: bar
-
         anchors.top: parent.top
         width: parent.width
-
         TabButton {
-            text: qsTr("google.com")
+            text: qsTr("Google.com")
         }
-
         TabButton {
-            text: qsTr("libremelon.com")
+            text: qsTr("Bing.com")
         }
-
         TabButton {
             text: qsTr("kde.org")
         }
-
     }
 
     StackLayout {
         width: parent.width
         currentIndex: bar.currentIndex
-
         Item {
             id: tab1
         }
-
         Item {
             id: tab2
         }
-
         Item {
             id: tab3
         }
-
     }
 
     SearchField {
         id: search
-
         anchors.top: bar.bottom
         width: parent.width
     }
 
-    ServoWebView {
+    WebEngineView {
+        anchors.top: search.bottom
+        anchors.bottom: parent.bottom
+        width: parent.width
         url: "https://libremelon.com"
     }
-
 }
