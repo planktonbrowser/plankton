@@ -1,13 +1,14 @@
 add_executable(plankton)
 
 ecm_add_qml_module(plankton
-    URI
-    org.plankton.browser
+    URI "org.plankton.browser"
 )
 
 target_sources(plankton
     PRIVATE
     main.cpp
+    servowebview.h
+    servowebview.cpp
 )
 
 ecm_target_qml_sources(plankton

@@ -1,4 +1,5 @@
 import org.kde.kirigami as Kirigami
+import org.plankton.browser
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick
@@ -42,10 +43,20 @@ Kirigami.ApplicationWindow {
         width: parent.width
     }
 
-    WebEngineView {
-        anchors.top: search.bottom
-        anchors.bottom: parent.bottom
-        width: parent.width
-        url: "https://libremelon.com"
+    // WebEngineView {
+    //     anchors.top: search.bottom
+    //     anchors.bottom: parent.bottom
+    //     width: parent.width
+    //     url: "https://libremelon.com"
+    // }
+
+    ServoWebView {
+        id: servoView
+        text: "Hello from C++"
+        Component.onCompleted: servoView.doSomething()
+    }
+    Label {
+        anchors.centerIn: parent
+        text: servoView.text
     }
 }
