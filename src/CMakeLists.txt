@@ -16,10 +16,20 @@ ecm_target_qml_sources(plankton
     Main.qml
 )
 
+qt6_add_shaders(plankton "plankton_shaders"
+    # GLSL "300 es,130"
+    PREFIX
+        "/plankton"
+    FILES
+        "shaders/customrender.vert"
+        "shaders/customrender.frag"
+)
+
 target_link_libraries(plankton
     PRIVATE
         Qt6::Core
         Qt6::Gui
+        Qt6::GuiPrivate
         Qt6::Qml
         Qt6::Quick
         Qt6::QuickControls2

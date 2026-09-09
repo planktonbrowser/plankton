@@ -18,9 +18,11 @@ find_package(Qt6 REQUIRED COMPONENTS
     Quick
     Test
     Gui
+    GuiPrivate
     QuickControls2
     Widgets
     WebEngineQuick
+    ShaderTools
 )
 
 find_package(KF6 REQUIRED COMPONENTS
