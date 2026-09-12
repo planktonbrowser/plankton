@@ -1,0 +1,11 @@
+[package]
+name = "rust_backend"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cxx = "1.0"
+servo = { git = "https://github.com/servo/servo.git" }
+
+[build-dependencies]
+cxx-build = "1.0"
