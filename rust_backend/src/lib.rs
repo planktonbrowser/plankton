@@ -1,17 +1,15 @@
-use wgpu::{RequestAdapterOptions, naga::SwizzleComponent::W};
+use ash::vk::Handle;
+use wgpu::hal::api::Vulkan;
 
-pub struct State {
-    // surface: wgpu::Surface<'static>,
-    device: wgpu::Device,
-    queue: wgpu::Queue,
-    // config: wgpu::SurfaceConfiguration,
-    // is_surface_configured: bool,
+pub struct WgpuState {
+    pub device: wgpu::Device,
+    pub queue: wgpu::Queue,
+    pub render_target: wgpu::Texture,
 }
 
-impl State {
-    pub async fn run() {
+impl WgpuState {
+    pub async fn new() -> Self {
         const TEXTURE_DIMS: (usize, usize) = (512, 512);
-        let mut texture_data = Vec::<u8>::with_capacity(TEXTURE_DIMS.0 * TEXTURE_DIMS.1 * 4);
 
         let instance = wgpu::Instance::default();
         let adapter = instance
@@ -30,7 +28,7 @@ impl State {
             .await
             .unwrap();
 
-        let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wsgl"));
+        let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
 
         let render_target = device.create_texture(&wgpu::TextureDescriptor {
             label: None,
@@ -97,5 +95,30 @@ impl State {
         }
         queue.submit(Some(command_encoder.finish()));
         log::info!("Commands submitted.");
+
+        Self {
+            device,
+            queue,
+            render_target,
+        }
+    }
+}
+
+pub fn hal_texture() -> u64 {
+    let state = pollster::block_on(WgpuState::new());
+    let hal = unsafe {
+        state
+            .render_target
+            .as_hal::<Vulkan>()
+            .expect("Texture is not running on Vulkan backend")
+    };
+    let raw_vk_image = unsafe { hal.raw_handle() };
+    raw_vk_image.as_raw()
+}
+
+#[cxx::bridge]
+mod ffi {
+    extern "Rust" {
+        fn hal_texture() -> u64;
     }
 }

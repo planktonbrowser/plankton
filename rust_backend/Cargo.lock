@@ -5143,6 +5143,7 @@ name = "rust_backend"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "ash",
  "cxx",
  "cxx-build",
  "env_logger 0.10.2",
