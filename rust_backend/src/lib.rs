@@ -1,4 +1,5 @@
 use ash::vk::Handle;
+use std::sync::OnceLock;
 use wgpu::hal::api::Vulkan;
 
 pub struct WgpuState {
@@ -7,8 +8,10 @@ pub struct WgpuState {
     pub render_target: wgpu::Texture,
 }
 
+static WGPU_STATE: OnceLock<WgpuState> = OnceLock::new();
+
 impl WgpuState {
-    pub async fn new() -> Self {
+    pub async fn new() {
         const TEXTURE_DIMS: (usize, usize) = (512, 512);
 
         let instance = wgpu::Instance::default();
@@ -41,7 +44,9 @@ impl WgpuState {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT
+                | wgpu::TextureUsages::COPY_SRC
+                | wgpu::TextureUsages::TEXTURE_BINDING,
             view_formats: &[wgpu::TextureFormat::Rgba8UnormSrgb],
         });
 
@@ -96,18 +101,22 @@ impl WgpuState {
         queue.submit(Some(command_encoder.finish()));
         log::info!("Commands submitted.");
 
-        Self {
+        WGPU_STATE.get_or_init(|| Self {
             device,
             queue,
             render_target,
-        }
+        });
     }
 }
 
 pub fn hal_texture() -> u64 {
-    let state = pollster::block_on(WgpuState::new());
+    if WGPU_STATE.get().is_none() {
+        pollster::block_on(WgpuState::new());
+    }
     let hal = unsafe {
-        state
+        WGPU_STATE
+            .get()
+            .expect("WGPU state empty")
             .render_target
             .as_hal::<Vulkan>()
             .expect("Texture is not running on Vulkan backend")
