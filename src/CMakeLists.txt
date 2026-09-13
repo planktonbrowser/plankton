@@ -1,3 +1,13 @@
+
+set(RUST_TARGET_DIR "${CMAKE_SOURCE_DIR}/rust_backend/target")
+
+add_custom_target(cargo_build ALL
+    COMMAND cargo build --release
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/rust_backend"
+    BYPRODUCTS "${RUST_TARGET_DIR}/release/librust_backend.a"
+)
+
+
 add_executable(plankton)
 
 ecm_add_qml_module(plankton
@@ -25,8 +35,17 @@ qt6_add_shaders(plankton "plankton_shaders"
         "shaders/customrender.frag"
 )
 
+add_dependencies(plankton cargo_build)
+
+target_include_directories(plankton PRIVATE
+    "${RUST_TARGET_DIR}/cxxbridge/crate"
+    "${RUST_TARGET_DIR}/cxxbridge"
+)
+
 target_link_libraries(plankton
     PRIVATE
+        "${RUST_TARGET_DIR}/release/librust_backend.a"
+        dl pthread m
         Qt6::Core
         Qt6::Gui
         Qt6::GuiPrivate
