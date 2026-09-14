@@ -31,8 +31,8 @@ qt6_add_shaders(plankton "plankton_shaders"
     PREFIX
         "/plankton"
     FILES
-        "shaders/customrender.vert"
-        "shaders/customrender.frag"
+        "shaders/texturedquad.vert"
+        "shaders/texturedquad.frag"
 )
 
 add_dependencies(plankton cargo_build)

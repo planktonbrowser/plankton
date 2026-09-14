@@ -9,31 +9,18 @@
 
 class ServoWebView : public QQuickItem {
   Q_OBJECT
-  Q_PROPERTY(QList<QVector2D> vertices READ vertices WRITE setVertices NOTIFY
-                 verticesChanged)
   QML_ELEMENT
 
 public:
   explicit ServoWebView(QQuickItem *parent = nullptr);
 
-  QList<QVector2D> vertices() const;
-  void setVertices(const QList<QVector2D> &newVertices);
-
-Q_SIGNALS:
-  void verticesChanged();
-
 protected:
   QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
-
-private:
-  QList<QVector2D> m_vertices;
 };
 
 class ServoRenderNode : public QSGRenderNode {
 public:
   ServoRenderNode(QQuickWindow *window);
-
-  void setVertices(const QList<QVector2D> &vertices);
 
   void prepare() override;
   void render(const RenderState *state) override;
@@ -48,6 +35,6 @@ protected:
   std::unique_ptr<QRhiShaderResourceBindings> m_resourceBindings;
   std::unique_ptr<QRhiGraphicsPipeline> m_pipeline;
   QList<QRhiShaderStage> m_shaders;
-  bool m_verticesDirty = true;
-  QList<QVector2D> m_vertices;
+  std::unique_ptr<QRhiTexture> m_wrappedTex;
+  std::unique_ptr<QRhiSampler> m_sampler;
 };

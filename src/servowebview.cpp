@@ -1,4 +1,5 @@
 #include "servowebview.h"
+#include "rust_backend/src/lib.rs.h"
 #include <qdir.h>
 #include <qlist.h>
 #include <qlogging.h>
@@ -13,16 +14,22 @@
 #include <rhi/qrhi.h>
 #include <rhi/qshader.h>
 
+static const float quadVertices[] = {
+    // x,y, u, v
+    -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, 1.0f,  1.0f, 0.0f,
+};
+
 ServoRenderNode::ServoRenderNode(QQuickWindow *window) : m_window(window) {
   QFile file;
-  file.setFileName(QStringLiteral(":/plankton/shaders/customrender.vert.qsb"));
+  file.setFileName(QStringLiteral(":/plankton/shaders/texturedquad.vert.qsb"));
   if (!file.open(QFile::ReadOnly)) {
     qFatal("Failed to load vertex shader");
   }
   m_shaders.append(QRhiShaderStage(QRhiShaderStage::Vertex,
                                    QShader::fromSerialized(file.readAll())));
   file.close();
-  file.setFileName(QStringLiteral(":/plankton/shaders/customrender.frag.qsb"));
+  file.setFileName(QStringLiteral(":/plankton/shaders/texturedquad.frag.qsb"));
   if (!file.open(QFile::ReadOnly)) {
     qFatal("Failed to load fragment shader");
   }
@@ -30,22 +37,13 @@ ServoRenderNode::ServoRenderNode(QQuickWindow *window) : m_window(window) {
                                     QShader::fromSerialized(file.readAll()))));
 }
 
-void ServoRenderNode::setVertices(const QList<QVector2D> &vertices) {
-  if (m_vertices == vertices) {
-    return;
-  }
-
-  m_verticesDirty = true;
-  m_vertices = vertices;
-
-  markDirty(QSGNode::DirtyGeometry);
-}
-
 void ServoRenderNode::releaseResources() {
   m_vertexBuffer.reset();
   m_uniformBuffer.reset();
   m_pipeline.reset();
   m_resourceBindings.reset();
+  m_wrappedTex.reset();
+  m_sampler.reset();
 }
 
 QSGRenderNode::RenderingFlags ServoRenderNode::flags() const {
@@ -62,18 +60,11 @@ void ServoRenderNode::prepare() {
   QRhi *rhi = m_window->rhi();
   QRhiResourceUpdateBatch *resourceUpdates = rhi->nextResourceUpdateBatch();
 
-  if (m_verticesDirty) {
-    m_vertexBuffer.reset();
-    m_verticesDirty = false;
-  }
-
   if (!m_vertexBuffer) {
-    m_vertexBuffer.reset(
-        rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer,
-                       m_vertices.count() * sizeof(QVector2D)));
+    m_vertexBuffer.reset(rhi->newBuffer(
+        QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, sizeof(quadVertices)));
     m_vertexBuffer->create();
-    resourceUpdates->uploadStaticBuffer(m_vertexBuffer.get(),
-                                        m_vertices.constData());
+    resourceUpdates->uploadStaticBuffer(m_vertexBuffer.get(), quadVertices);
   }
 
   if (!m_uniformBuffer) {
@@ -82,13 +73,32 @@ void ServoRenderNode::prepare() {
     m_uniformBuffer->create();
   }
 
+  if (!m_wrappedTex) {
+    uint64_t vkImageHandle = hal_texture();
+
+    QRhiTexture::NativeTexture nt{vkImageHandle,
+                                  VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+    m_wrappedTex.reset(rhi->newTexture(QRhiTexture::RGBA8, QSize(512, 512), 1,
+                                       QRhiTexture::Flags{}));
+    m_wrappedTex->createFrom(nt);
+    m_sampler.reset(rhi->newSampler(QRhiSampler::Linear, QRhiSampler::Linear,
+                                    QRhiSampler::None, QRhiSampler::ClampToEdge,
+                                    QRhiSampler::ClampToEdge));
+    m_sampler->create();
+  }
+
   if (!m_resourceBindings) {
     m_resourceBindings.reset(rhi->newShaderResourceBindings());
-    m_resourceBindings->setBindings({QRhiShaderResourceBinding::uniformBuffer(
-        0,
-        QRhiShaderResourceBinding::VertexStage |
-            QRhiShaderResourceBinding::FragmentStage,
-        m_uniformBuffer.get())});
+    m_resourceBindings->setBindings({
+        QRhiShaderResourceBinding::uniformBuffer(
+            0,
+            QRhiShaderResourceBinding::VertexStage |
+                QRhiShaderResourceBinding::FragmentStage,
+            m_uniformBuffer.get()),
+        QRhiShaderResourceBinding::sampledTexture(
+            1, QRhiShaderResourceBinding::FragmentStage, m_wrappedTex.get(),
+            m_sampler.get()),
+    });
     m_resourceBindings->create();
   }
 
@@ -108,8 +118,11 @@ void ServoRenderNode::prepare() {
     m_pipeline->setShaderStages(m_shaders.cbegin(), m_shaders.cend());
     m_pipeline->setDepthTest(true);
     QRhiVertexInputLayout inputLayout;
-    inputLayout.setBindings({2 * sizeof(float)});
-    inputLayout.setAttributes({{0, 0, QRhiVertexInputAttribute::Float2, 0}});
+    inputLayout.setBindings({4 * sizeof(float)});
+    inputLayout.setAttributes({
+        {0, 0, QRhiVertexInputAttribute::Float2, 0},                 // position
+        {0, 1, QRhiVertexInputAttribute::Float2, 2 * sizeof(float)}, // uv
+    });
     m_pipeline->setVertexInputLayout(inputLayout);
     m_pipeline->setRenderPassDescriptor(renderTarget()->renderPassDescriptor());
     m_pipeline->create();
@@ -132,22 +145,11 @@ void ServoRenderNode::render(const RenderState *) {
   cb->setShaderResources();
   QRhiCommandBuffer::VertexInput vertexBindings[] = {{m_vertexBuffer.get(), 0}};
   cb->setVertexInput(0, 1, vertexBindings);
-  cb->draw(m_vertices.count());
+  cb->draw(4);
 }
 
 ServoWebView::ServoWebView(QQuickItem *parent) : QQuickItem(parent) {
   setFlag(ItemHasContents, true);
-  connect(this, &ServoWebView::verticesChanged, this, &ServoWebView::update);
-}
-
-QList<QVector2D> ServoWebView::vertices() const { return m_vertices; }
-
-void ServoWebView::setVertices(const QList<QVector2D> &newVertices) {
-  if (m_vertices == newVertices)
-    return;
-
-  m_vertices = newVertices;
-  Q_EMIT verticesChanged();
 }
 
 QSGNode *ServoWebView::updatePaintNode(QSGNode *old, UpdatePaintNodeData *) {
@@ -157,6 +159,6 @@ QSGNode *ServoWebView::updatePaintNode(QSGNode *old, UpdatePaintNodeData *) {
     node = new ServoRenderNode(window());
   }
 
-  node->setVertices(m_vertices);
+  // node->setVertices(m_vertices);
   return node;
 }

@@ -54,11 +54,5 @@ Kirigami.ApplicationWindow {
         width: Math.min(parent.width, parent.height)
         height: width
         anchors.centerIn: parent
-
-        property real a: width/2
-        property real b: Math.sqrt(3.0)*a/2;
-        vertices: [Qt.vector2d(width/2 - a/2, height/2 + b/3),
-            Qt.vector2d(width/2 + a/2, height/2 + b/3),
-            Qt.vector2d(width/2, height/2 - b*2/3)]
     }
 }
